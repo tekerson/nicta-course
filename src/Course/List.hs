@@ -85,8 +85,9 @@ headOr d Nil = d
 product ::
   List Int
   -> Int
-product (x:.xs) = x * product xs
-product Nil = 1
+--product (x:.xs) = x * product xs
+--product Nil = 1
+product = foldRight (*) 1
 
 -- | Sum the elements of the list.
 --
@@ -100,8 +101,9 @@ product Nil = 1
 sum ::
   List Int
   -> Int
-sum (x:.xs) = x + sum xs
-sum Nil = 0
+--sum (x:.xs) = x + sum xs
+--sum Nil = 0
+sum = foldRight (+) 0
 
 -- | Return the length of the list.
 --
@@ -112,8 +114,9 @@ sum Nil = 0
 length ::
   List a
   -> Int
-length (_:.as) = 1 + length as
-length Nil = 0
+--length (_:.as) = 1 + length as
+--length Nil = 0
+length = foldRight (\_ acc -> acc + 1) 0
 
 -- | Map the given function on each element of the list.
 --
@@ -127,8 +130,9 @@ map ::
   (a -> b)
   -> List a
   -> List b
-map f (x:.xs) = f x :. map f xs
-map _ Nil = Nil
+--map f (x:.xs) = f x :. map f xs
+--map _ Nil = Nil
+map f = foldRight ((:.) . f) Nil
 
 -- | Return elements satisfying the given predicate.
 --
@@ -144,9 +148,10 @@ filter ::
   (a -> Bool)
   -> List a
   -> List a
-filter p (a:.as) | p a = a :. filter p as
-                 | otherwise = filter p as
-filter _ Nil = Nil
+--filter p (a:.as) | p a = a :. filter p as
+--                 | otherwise = filter p as
+--filter _ Nil = Nil
+filter p = foldRight (\a -> if p a then (a:.) else id) Nil
 
 -- | Append two lists to a new list.
 --
@@ -164,9 +169,10 @@ filter _ Nil = Nil
   List a
   -> List a
   -> List a
-(++) (a:.as) bs = a :. as ++ bs
-(++) a Nil = a
-(++) Nil b = b
+--(++) (a:.as) bs = a :. as ++ bs
+--(++) a Nil = a
+--(++) Nil b = b
+(++) l r = foldRight (:.) r l
 
 infixr 5 ++
 
@@ -183,8 +189,9 @@ infixr 5 ++
 flatten ::
   List (List a)
   -> List a
-flatten (a:.as) = a ++ flatten as
-flatten Nil = Nil
+--flatten (a:.as) = a ++ flatten as
+--flatten Nil = Nil
+flatten = foldRight (++) Nil
 
 -- | Map a function then flatten to a list.
 --
@@ -236,11 +243,12 @@ flattenAgain = flatMap id
 seqOptional ::
   List (Optional a)
   -> Optional (List a)
-seqOptional (Empty:._) = Empty
-seqOptional ((Full a):.as) = case seqOptional as of
-                                  Full xs -> Full (a :. xs)
-                                  Empty -> Empty
-seqOptional Nil = Full Nil
+--seqOptional (Empty:._) = Empty
+--seqOptional (Full a:.as) = case seqOptional as of
+--                                  Full xs -> Full (a :. xs)
+--                                  Empty -> Empty
+--seqOptional Nil = Full Nil
+seqOptional = foldRight (twiceOptional (:.)) (Full Nil)
 
 
 -- | Find the first element in the list matching the predicate.
