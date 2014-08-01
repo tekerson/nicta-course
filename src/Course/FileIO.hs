@@ -63,7 +63,10 @@ the contents of c
 main ::
   IO ()
 main =
-  error "todo"
+  getArgs >>= \args ->
+    case args of
+         (file :. Nil) -> run file
+         _ -> putStrLn "Invalid Args"
 
 type FilePath =
   Chars
@@ -72,31 +75,38 @@ type FilePath =
 run ::
   Chars
   -> IO ()
-run =
-  error "todo"
+run path = do
+  content <- readFile path
+  files <- getFiles $ lines content
+  printFiles files
+
 
 getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
-getFiles =
-  error "todo"
+getFiles = sequence . (<$>) getFile
 
 getFile ::
   FilePath
   -> IO (FilePath, Chars)
-getFile =
-  error "todo"
+getFile path = do
+  content <- readFile path
+  return (path, content)
 
 printFiles ::
   List (FilePath, Chars)
   -> IO ()
-printFiles =
-  error "todo"
+--printFiles Nil = return ()
+--printFiles ((path, content) :. files) = do
+--  printFile path content
+--  printFiles files
+printFiles = void . sequence . (<$>) (uncurry printFile)
 
 printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile =
-  error "todo"
+printFile path content = do
+  putStrLn $ "============ " ++ path
+  putStrLn content
 
