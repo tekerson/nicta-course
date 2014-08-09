@@ -6,7 +6,7 @@
 module Course.State where
 
 import Course.Core
-import qualified Prelude as P
+import Prelude()
 import Course.Optional
 import Course.List
 import Course.Functor
@@ -67,7 +67,7 @@ instance Applicative (State s) where
   pure ::
     a
     -> State s a
-  pure a = State (\s -> (a, s))
+  pure a = State $ (,) a
 
 -- | Implement the `Bind` instance for `State s`.
 -- >>> runState ((const $ put 2) =<< put 1) 0
@@ -105,7 +105,7 @@ eval (State st) = fst . st
 -- (0,0)
 get ::
   State s s
-get = State (\s -> (s, s))
+get = State $ join (,)
 
 -- | A `State` where the resulting state is seeded with the given value.
 --
@@ -114,7 +114,7 @@ get = State (\s -> (s, s))
 put ::
   s
   -> State s ()
-put s = State (\_ -> ((), s))
+put s = State $ const ((), s)
 
 -- | Find the first element in a `List` that satisfies a given predicate.
 -- It is possible that no element is found, hence an `Optional` result.
