@@ -66,6 +66,9 @@ echo =
 data Op =
   Op Char Chars (IO ()) -- keyboard entry, description, program
 
+prompt :: Chars -> IO Chars
+prompt p = putStr p >- getLine
+
 -- |
 --
 -- * Ask the user to enter a string to convert to upper-case.
@@ -84,7 +87,7 @@ data Op =
 convertInteractive ::
   IO ()
 convertInteractive =
-  error "todo"
+  putStrLn =<< map toUpper <$> prompt "Upper case? "
 
 -- |
 --
@@ -112,7 +115,10 @@ convertInteractive =
 reverseInteractive ::
   IO ()
 reverseInteractive =
-  error "todo"
+  (prompt "In file? ") >>= \inF ->
+  (prompt "Out file? ") >>= \outF ->
+  (readFile inF) >>= \inC ->
+    writeFile outF (reverse inC)
 
 -- |
 --
@@ -138,7 +144,13 @@ reverseInteractive =
 encodeInteractive ::
   IO ()
 encodeInteractive =
-  error "todo"
+  (prompt "URL? ") >>= \url ->
+    putStrLn (encode =<< url)
+  where encode c = case c of
+                        ' ' -> "%20"
+                        '\t' -> "%09"
+                        '\"' -> "%22"
+                        _ -> c :. Nil
 
 interactive ::
   IO ()
