@@ -49,22 +49,17 @@ import Course.Optional
 jsonString ::
   Parser Chars
 jsonString =
-  between (is '"') (is '"') $ list $
-    escaped
-    ||| (is '\\' >>> hex)
-    ||| (satisfyAll ((/= '\"') :. (/= '\\') :. Nil))
-  where escaped = do
-          _ <- is '\\'
-          c <- oneof "\"\\/bfnrt"
-          pure $ case c of
-                      '"'  -> '\"'
-                      '\\' -> '\\'
-                      'b' -> '\b'
-                      'f' -> '\f'
-                      'n' -> '\n'
-                      'r' -> '\r'
-                      't' -> '\t'
-                      _ -> undefined
+  between (is '"') (is '"') $ list stringBody
+  where
+    stringBody = escaped ||| satisfyAll ((/= '\"') :. (/= '\\') :. Nil)
+    escaped = is '\\' *> (hex
+                     ||| (trans 'b' '\b')
+                     ||| (trans '"' '\"')
+                     ||| (trans 'f' '\f')
+                     ||| (trans 'n' '\n')
+                     ||| (trans 'r' '\r')
+                     ||| (trans 'f' '\f'))
+    trans i o = is i *> pure o
 
 -- | Parse a JSON rational.
 --
