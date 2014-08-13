@@ -14,13 +14,19 @@ fastAnagrams ::
   Chars
   -> Filename
   -> IO (List Chars)
-fastAnagrams =
-  error "todo"
+fastAnagrams str file =
+  (ncString <$>) <$>
+    flip (filter . flip S.member)
+         (map NoCaseString $ permutations str)
+         <$> S.fromList <$> hlist . map NoCaseString . lines <$> readFile file
 
 newtype NoCaseString =
   NoCaseString {
     ncString :: Chars
   }
+
+instance Ord NoCaseString where
+  compare = compare `on` map toLower . ncString
 
 instance Eq NoCaseString where
   (==) = (==) `on` map toLower . ncString
