@@ -186,6 +186,9 @@ data Digit =
   | Nine
   deriving (Eq, Enum, Bounded)
 
+instance Show Digit where
+  show = hlist . showDigit
+
 showDigit ::
   Digit
   -> Chars
@@ -320,5 +323,82 @@ fromChar _ =
 dollars ::
   Chars
   -> Chars
-dollars =
-  error "todo"
+dollars input =
+  let (d, c) = split input
+      dd = parseInput d
+      cd = take 2 (parseInput c)
+  in
+    (display dd) ++ " " ++ (pluralize "dollar" "dollars" dd)
+    ++ " and " ++
+    (display cd) ++ " " ++ (pluralize "cent" "cents" cd)
+
+parseInput :: Chars -> List Digit
+parseInput = filterFull . map fromChar
+
+display :: List Digit -> Chars
+display Nil = showDigit Zero
+display ds = foldRight spaced Nil $ reverse $
+  zipWith illionize (group $ reverse ds) illion
+
+pluralize :: t -> t -> List Digit -> t
+pluralize s p ds = pluralize' $ dropWhile (== Zero) ds
+  where pluralize' (One :. Nil) = s
+        pluralize' _ = p
+
+illionize :: Digit3 -> Chars -> Chars
+illionize d "" = showDigit3 d
+illionize (D3 Zero Zero Zero) _ = ""
+illionize (D2 Zero Zero) _ = ""
+illionize (D1 Zero) _ = ""
+illionize d s = showDigit3 d ++ " " ++ s
+
+spaced :: Chars -> Chars -> Chars
+spaced a Nil = a
+spaced Nil b = b
+spaced a b = a ++ " " ++ b
+
+split :: Chars -> (Chars, Chars)
+split = second (drop 1 . (++ repeat '0')) . break (== '.')
+
+swap :: (a, b) -> (b, a)
+swap (a, b) = (b, a)
+
+filterFull :: List (Optional a) -> List a
+filterFull Nil = Nil
+filterFull (Full x :. xs) = x :. filterFull xs
+filterFull (Empty :. xs) = filterFull xs
+
+group :: List Digit -> List Digit3
+group Nil = Nil
+group (o :. Nil) = D1 o :. Nil
+group (o :. t :. Nil) = D2 t o :. Nil
+group (o :. t :. h :. cs) = D3 h t o :. group cs
+
+showDigit3 :: Digit3 -> Chars
+
+showDigit3 (D3 Zero Zero o) = showDigit3 (D1 o)
+showDigit3 (D3 Zero t o) = showDigit3 (D2 t o)
+showDigit3 (D3 h Zero Zero) = showDigit h ++ " hundred"
+showDigit3 (D3 h t o) = showDigit h ++ " hundred and " ++ showDigit3 (D2 t o)
+
+showDigit3 (D2 Zero o) = showDigit3 (D1 o)
+showDigit3 (D2 One Zero) = "ten"
+showDigit3 (D2 One One) = "eleven"
+showDigit3 (D2 One Two) = "twelve"
+showDigit3 (D2 One Three) = "thirteen"
+showDigit3 (D2 One Five) = "fifteen"
+showDigit3 (D2 One Eight) = "eighteen"
+showDigit3 (D2 One o) = showDigit o ++ "teen"
+showDigit3 (D2 Two Zero) = "twenty"
+showDigit3 (D2 Three Zero) = "thirty"
+showDigit3 (D2 Four Zero) = "forty"
+showDigit3 (D2 Five Zero) = "fifty"
+showDigit3 (D2 Eight Zero) = "eighty"
+showDigit3 (D2 t Zero) = showDigit t ++ "ty"
+showDigit3 (D2 t o) = showDigit3 (D2 t Zero) ++ "-" ++ showDigit o
+
+showDigit3 (D1 o) = showDigit o
+
+instance Show Digit3 where
+  show = hlist . showDigit3
+
